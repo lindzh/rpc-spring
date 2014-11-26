@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans  
+                           http://www.springframework.org/schema/beans/spring-beans.xsd
+					       http://www.springframework.org/schema/context
+						   http://www.springframework.org/schema/context/spring-context.xsd">
+		
+		
+	<bean id="rpcClient" class="com.linda.framework.rpc.client.SimpleRpcClient">
+		<property name="host" value="127.0.0.1"></property>
+		<property name="port" value="5432"></property>
+	</bean>	
+				   
+	<bean id="clientMap" class="java.util.HashMap">
+		<constructor-arg>
+			<map>
+				<entry key="rpcClient" value-ref="rpcClient"/>
+			</map>
+		</constructor-arg>
+	</bean>
+	
+	<bean id="rpcInvokerAnnotationScanner" class="com.linda.framework.rpc.spring.factory.RpcInvokerAnnotationScanner">
+		<property name="packages">
+			<list>
+				<value>com.linda.framework.rpc.spring.test</value>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="rpcAnnotationInvokerClassFilter" class="com.linda.framework.rpc.spring.factory.RpcAnnotationInvokerClassFilter"/>
+	
+	<bean id="rpcInvokerFactory" class="com.linda.framework.rpc.spring.factory.RpcInvokerFactory" destroy-method="stopService">
+		<property name="clientMap" ref="clientMap"></property>
+		<property name="rpcInvokerScanner" ref="rpcAnnotationInvokerClassFilter"/>
+		<property name="rpcInvokerScanner" ref="rpcInvokerAnnotationScanner"/>
+	</bean>
+	
+	<context:component-scan base-package="com.linda.framework.rpc.spring.test"></context:component-scan>
+	
+</beans>
