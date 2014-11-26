@@ -3,11 +3,13 @@ package com.linda.framework.rpc.spring.impl;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 
+import com.linda.framework.rpc.spring.annotation.RpcProviderService;
 import com.linda.framework.rpc.spring.test.HelloRpcService;
 import com.linda.framework.rpc.spring.test.TestBean;
 import com.linda.framework.rpc.spring.test.TestRemoteBean;
 
 @Service
+@RpcProviderService(rpcServer="simpleRpcServer")
 public class HelloRpcServiceImpl implements HelloRpcService{
 
 	private Logger logger = Logger.getLogger(HelloRpcServiceImpl.class);

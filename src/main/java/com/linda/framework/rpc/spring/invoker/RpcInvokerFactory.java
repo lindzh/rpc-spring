@@ -1,4 +1,4 @@
-package com.linda.framework.rpc.spring.factory;
+package com.linda.framework.rpc.spring.invoker;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.BeanFactory;
@@ -27,6 +28,8 @@ public class RpcInvokerFactory implements BeanFactory,InitializingBean,Applicati
 	private ConcurrentHashMap<String, Object> beanCache = new ConcurrentHashMap<String, Object>();
 	
 	private static final String DEFAULT_RPC_BEAN = "defaultRpcServer";
+	
+	private Logger logger = Logger.getLogger(RpcInvokerFactory.class);
 	
 	public Map<String, AbstractRpcClient> getClientMap() {
 		return clientMap;
@@ -54,11 +57,13 @@ public class RpcInvokerFactory implements BeanFactory,InitializingBean,Applicati
 
 	@Override
 	public Object getBean(String name) throws BeansException {
+		logger.info("getBean:"+name);
 		return beanCache.get(this.fixName(name));
 	}
 
 	@Override
 	public <T> T getBean(String name, Class<T> requiredType) throws BeansException {
+		logger.info("getBean:"+name+" class:"+requiredType);
 		Object bean = this.getBean(name);
 		if(this.isTypeMatch(name, requiredType)){
 			return (T)bean;
@@ -68,6 +73,7 @@ public class RpcInvokerFactory implements BeanFactory,InitializingBean,Applicati
 
 	@Override
 	public <T> T getBean(Class<T> requiredType) throws BeansException {
+		logger.info("getBean class:"+requiredType);
 		Set<String> keys = beanCache.keySet();
 		for(String key:keys){
 			if(this.isTypeMatch(key, requiredType)){
@@ -79,17 +85,20 @@ public class RpcInvokerFactory implements BeanFactory,InitializingBean,Applicati
 
 	@Override
 	public Object getBean(String name, Object... args) throws BeansException {
+		logger.info("getBean:"+name+" args");
 		return this.getBean(name);
 	}
 
 	@Override
 	public boolean containsBean(String name) {
+		logger.info("containsBean:"+name);
 		return beanCache.contains(name);
 	}
 
 	@Override
 	public boolean isSingleton(String name)
 			throws NoSuchBeanDefinitionException {
+		logger.info("isSingleton:"+name);
 		return beanCache.contains(name);
 	}
 
@@ -131,7 +140,7 @@ public class RpcInvokerFactory implements BeanFactory,InitializingBean,Applicati
 	}
 	
 	private String getClassSimple(Class<?> clazz){
-		String simpleName = clazz.getClass().getSimpleName();
+		String simpleName = clazz.getSimpleName();
 		String suffix = simpleName.substring(1);
 		char c = Character.toLowerCase(simpleName.charAt(0));
 		return c+suffix;
@@ -149,8 +158,8 @@ public class RpcInvokerFactory implements BeanFactory,InitializingBean,Applicati
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		List<Class<?>> list = rpcInvokerScanner.scan();
-		this.doCreateBeans(list);
+//		List<Class<?>> list = rpcInvokerScanner.scan();
+//		this.doCreateBeans(list);
 	}
 	
 	private void doCreateBeans(List<Class<?>> remotes){

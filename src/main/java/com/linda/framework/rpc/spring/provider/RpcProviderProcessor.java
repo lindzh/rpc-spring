@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
@@ -18,16 +19,19 @@ import com.linda.framework.rpc.server.AbstractRpcServer;
 import com.linda.framework.rpc.spring.annotation.RpcProviderFilter;
 import com.linda.framework.rpc.spring.annotation.RpcProviderService;
 
-public class RpcProviderProcessor implements ApplicationContextAware{
+public class RpcProviderProcessor implements ApplicationContextAware,InitializingBean{
 
 	private static Logger logger = 	Logger.getLogger(RpcProviderProcessor.class);
 	
 	private ConcurrentHashMap<String, AbstractRpcServer> serverMap = new ConcurrentHashMap<String,AbstractRpcServer>();
 	private static final String DEFAULT_RPC_BEAN = "defaultRpcServer";
 	
+	private ApplicationContext apc;
+	
 	@Override
 	public void setApplicationContext(ApplicationContext apc)
 			throws BeansException {
+		this.apc = apc;
 		this.initRpcServer(apc);
 		this.initRpcFilter(apc);
 		this.registerRpcs(apc);
@@ -51,11 +55,15 @@ public class RpcProviderProcessor implements ApplicationContextAware{
 		Map<String, Object> map = apc.getBeansWithAnnotation(RpcProviderService.class);
 		Collection<Object> values = map.values();
 		for(Object obj:values){
+			RpcProviderService providerService = obj.getClass().getAnnotation(RpcProviderService.class);
 			Class<?>[] ifs = obj.getClass().getInterfaces();
 			for(Class<?> iface:ifs){
-				RpcProviderService service = iface.getAnnotation(RpcProviderService.class);
+				RpcProviderService service = providerService;
+				if(providerService==null){
+					iface.getAnnotation(RpcProviderService.class);
+				}
 				if(service!=null){
-					String bean = service.bean();
+					String bean = service.rpcServer();
 					if(bean==null){
 						bean = DEFAULT_RPC_BEAN;
 					}
@@ -77,7 +85,7 @@ public class RpcProviderProcessor implements ApplicationContextAware{
 		for(RpcFilter filter:filters){
 			RpcProviderFilter providerFilter = filter.getClass().getAnnotation(RpcProviderFilter.class);
 			if(providerFilter!=null){
-				String bean = providerFilter.bean();
+				String bean = providerFilter.rpcServer();
 				AbstractRpcServer server = serverMap.get(bean);
 				if(server==null){
 					throw new BeanCreationException("inject rpcfilter can't find rpcServer of name:"+bean);
@@ -108,5 +116,10 @@ public class RpcProviderProcessor implements ApplicationContextAware{
 			server.stopService();
 			logger.info("stop rpc service:"+server.getHost()+":"+server.getPort());
 		}
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+
 	}
 }

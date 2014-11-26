@@ -1,4 +1,4 @@
-package com.linda.framework.rpc.spring.factory;
+package com.linda.framework.rpc.spring.invoker;
 
 import com.linda.framework.rpc.spring.annotation.RpcInvokerService;
 

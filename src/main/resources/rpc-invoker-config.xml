@@ -8,7 +8,7 @@
 						   http://www.springframework.org/schema/context/spring-context.xsd">
 		
 		
-	<bean id="rpcClient" class="com.linda.framework.rpc.client.SimpleRpcClient">
+	<bean id="simpleRpcClient" class="com.linda.framework.rpc.client.SimpleRpcClient">
 		<property name="host" value="127.0.0.1"></property>
 		<property name="port" value="5432"></property>
 	</bean>	
@@ -16,7 +16,7 @@
 	<bean id="clientMap" class="java.util.HashMap">
 		<constructor-arg>
 			<map>
-				<entry key="rpcClient" value-ref="rpcClient"/>
+				<entry key="simpleRpcClient" value-ref="simpleRpcClient"/>
 			</map>
 		</constructor-arg>
 	</bean>
@@ -29,11 +29,8 @@
 		</property>
 	</bean>
 	
-	<bean id="rpcAnnotationInvokerClassFilter" class="com.linda.framework.rpc.spring.factory.RpcAnnotationInvokerClassFilter"/>
-	
 	<bean id="rpcInvokerFactory" class="com.linda.framework.rpc.spring.factory.RpcInvokerFactory" destroy-method="stopService">
 		<property name="clientMap" ref="clientMap"></property>
-		<property name="rpcInvokerScanner" ref="rpcAnnotationInvokerClassFilter"/>
 		<property name="rpcInvokerScanner" ref="rpcInvokerAnnotationScanner"/>
 	</bean>
 	

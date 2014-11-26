@@ -1,10 +1,14 @@
-package com.linda.framework.rpc.spring.factory;
+package com.linda.framework.rpc.spring.invoker;
 
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.config.BeanDefinitionHolder;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -12,9 +16,13 @@ import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 
-import com.linda.framework.rpc.spring.annotation.RpcInvokerService;
+public class RpcInvokerAnnotationScanner extends ClassPathBeanDefinitionScanner{
 
-public class RpcInvokerAnnotationScanner implements RpcInvokerScanner{
+	static final String DEFAULT_RESOURCE_PATTERN = "**/*.class";
+	
+	public RpcInvokerAnnotationScanner(BeanDefinitionRegistry registry) {
+		super(registry,false);
+	}
 
 	private Logger logger = Logger.getLogger(RpcInvokerAnnotationScanner.class);
 	
@@ -34,13 +42,13 @@ public class RpcInvokerAnnotationScanner implements RpcInvokerScanner{
 		this.packages = packages;
 	}
 
-	@Override
 	public List<Class<?>> scan() {
 		ClassLoader classLoader = this.getClass().getClassLoader();
 		LinkedList<Class<?>> list = new LinkedList<Class<?>>();
 		if(packages!=null){
 			for(String pkg:packages){
-				String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +pkg + "/" + DEFAULT_RESOURCE_PATTERN;
+				String path = pkg.replace(".", "/");
+				String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +path + "/" + DEFAULT_RESOURCE_PATTERN;
 				try {
 					Resource[] resources = resourcePatternResolver.getResources(packageSearchPath);
 					if(resources!=null){

@@ -1,4 +1,4 @@
-package com.linda.framework.rpc.spring.factory;
+package com.linda.framework.rpc.spring.invoker;
 
 public interface RpcInvokerClassFilter {
 	
