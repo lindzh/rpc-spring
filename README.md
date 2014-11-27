@@ -86,7 +86,7 @@ public class RpcProviderTestCase extends AbstractTestCase{
 }
 ```
 
-##Client register a remote service throw rpc
+##Client register a remote service through rpc
 
 >Client register it as a service and import it
 
