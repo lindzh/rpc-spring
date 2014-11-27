@@ -95,14 +95,6 @@ public class RpcProviderTestCase extends AbstractTestCase{
 		<property name="host" value="127.0.0.1"></property>
 		<property name="port" value="5432"></property>
 	</bean>	
-				   
-	<bean id="clientMap" class="java.util.HashMap">
-		<constructor-arg>
-			<map>
-				<entry key="simpleRpcClient" value-ref="simpleRpcClient"/>
-			</map>
-		</constructor-arg>
-	</bean>
 	
 	<bean id="rpcPackages" class="java.util.ArrayList">
 		<constructor-arg>
@@ -114,15 +106,33 @@ public class RpcProviderTestCase extends AbstractTestCase{
 	
 	<bean id="rpcInvokerAnnotationConfigurer" class="com.linda.framework.rpc.spring.invoker.RpcInvokerAnnotationConfigurer" destroy-method="stopRpcService">
 		<property name="packages" ref="rpcPackages"/>
-		<property name="rpcClients" ref="clientMap"></property>
 	</bean>
 	
 	<context:component-scan base-package="com.linda.framework.rpc.spring.test"></context:component-scan>
 ```
+>make a interface as a service through remote rpc
+
+```java
+
+@RpcInvokerService(rpcServer="simpleRpcClient") //rpcClient bean name
+public interface HelloRpcService {
+	
+	public void sayHello(String message,int tt);
+	
+	public String getHello();
+	
+	public TestRemoteBean getBean(TestBean bean,int id);
+	
+	public int callException(boolean exception);
+
+}
+```
+>Now just use it as a common bean in spring container
 
 ```java
 @Service
 public class CallService {
+    //inject a service,normally it is implemented at simpleRpcClient
 	@Resource
 	private HelloRpcService helloService;
 	@Resource
