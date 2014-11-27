@@ -1,76 +1,91 @@
 package com.linda.framework.rpc.spring.invoker;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
+import org.springframework.core.type.filter.TypeFilter;
+
+import com.linda.framework.rpc.client.AbstractRpcClient;
 
 public class RpcInvokerAnnotationScanner extends ClassPathBeanDefinitionScanner{
-
-	static final String DEFAULT_RESOURCE_PATTERN = "**/*.class";
 	
-	public RpcInvokerAnnotationScanner(BeanDefinitionRegistry registry) {
-		super(registry,false);
-	}
-
-	private Logger logger = Logger.getLogger(RpcInvokerAnnotationScanner.class);
+	static final String DEFAULT_RESOURCE_PATTERN = "**/*.class";
 	
 	private ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
 
 	private MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(this.resourcePatternResolver);
-	
-	private List<String> packages;
-	
-	private RpcInvokerClassFilter classFilter = new RpcAnnotationInvokerClassFilter();
 
-	public List<String> getPackages() {
-		return packages;
-	}
+	private String resourcePattern = DEFAULT_RESOURCE_PATTERN;
 
-	public void setPackages(List<String> packages) {
-		this.packages = packages;
-	}
-
-	public List<Class<?>> scan() {
-		ClassLoader classLoader = this.getClass().getClassLoader();
-		LinkedList<Class<?>> list = new LinkedList<Class<?>>();
-		if(packages!=null){
-			for(String pkg:packages){
-				String path = pkg.replace(".", "/");
-				String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +path + "/" + DEFAULT_RESOURCE_PATTERN;
-				try {
-					Resource[] resources = resourcePatternResolver.getResources(packageSearchPath);
-					if(resources!=null){
-						for(Resource resource:resources){
-							MetadataReader reader = metadataReaderFactory.getMetadataReader(resource);
-							String className = reader.getClassMetadata().getClassName();
-							try {
-								Class<?> clazz = classLoader.loadClass(className);
-								if(classFilter.accept(clazz)){
-									list.add(clazz);
-								}
-							} catch (ClassNotFoundException e) {
-								logger.error("class not found:"+e.getMessage());
-							}
-						}
-					}
-				} catch (IOException e) {
-					logger.error("load resources error:"+packages);
-				}
+	public RpcInvokerAnnotationScanner(BeanDefinitionRegistry registry,Map<String,AbstractRpcClient> rpcClients) {
+		super(registry,false);
+		this.rpcClients = rpcClients;
+		super.addIncludeFilter(new TypeFilter(){
+			@Override
+			public boolean match(MetadataReader metadataReader,MetadataReaderFactory metadataReaderFactory)throws IOException {
+				String className = metadataReader.getClassMetadata().getClassName();
+				return acceptClassName(className);
 			}
-		}
-		
-		return list;
+		});
 	}
+	
+	private boolean acceptClassName(String className){
+		ClassLoader loader = RpcInvokerAnnotationScanner.class.getClassLoader();
+		try {
+			Class<?> clazz = loader.loadClass(className);
+			return classFilter.accept(clazz);
+		} catch (ClassNotFoundException e) {
+			return false;
+		}
+	}
+
+	private Logger logger = Logger.getLogger(RpcInvokerAnnotationScanner.class);
+	
+	private Map<String,AbstractRpcClient> rpcClients;
+	
+	public Map<String, AbstractRpcClient> getRpcClients() {
+		return rpcClients;
+	}
+
+	public void setRpcClients(Map<String, AbstractRpcClient> rpcClients) {
+		this.rpcClients = rpcClients;
+	}
+
+	private RpcInvokerClassFilter classFilter = new RpcAnnotationInvokerClassFilter();
+	
+
+	@Override
+	protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
+		HashSet<BeanDefinitionHolder> beans = new HashSet<BeanDefinitionHolder>();
+		Set<BeanDefinitionHolder> set = super.doScan(basePackages);
+		for(BeanDefinitionHolder bdh:set){
+			GenericBeanDefinition bdf = (GenericBeanDefinition)bdh.getBeanDefinition();
+			bdf.getPropertyValues().add("invokerInterface", bdf.getBeanClassName());
+			bdf.getPropertyValues().add("rpcClientCache", rpcClients);
+			bdf.setBeanClass(RpcInvokerFactoryBean.class);
+		}
+		return beans;
+	}
+
+	@Override
+	protected boolean isCandidateComponent(
+			AnnotatedBeanDefinition beanDefinition) {
+		String beanClassName = beanDefinition.getBeanClassName();
+		return this.acceptClassName(beanClassName);
+	}
+	
+	
 }

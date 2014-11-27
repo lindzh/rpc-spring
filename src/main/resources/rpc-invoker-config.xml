@@ -21,17 +21,17 @@
 		</constructor-arg>
 	</bean>
 	
-	<bean id="rpcInvokerAnnotationScanner" class="com.linda.framework.rpc.spring.factory.RpcInvokerAnnotationScanner">
-		<property name="packages">
+	<bean id="rpcPackages" class="java.util.ArrayList">
+		<constructor-arg>
 			<list>
 				<value>com.linda.framework.rpc.spring.test</value>
 			</list>
-		</property>
+		</constructor-arg>
 	</bean>
 	
-	<bean id="rpcInvokerFactory" class="com.linda.framework.rpc.spring.factory.RpcInvokerFactory" destroy-method="stopService">
-		<property name="clientMap" ref="clientMap"></property>
-		<property name="rpcInvokerScanner" ref="rpcInvokerAnnotationScanner"/>
+	<bean id="rpcInvokerAnnotationConfigurer" class="com.linda.framework.rpc.spring.invoker.RpcInvokerAnnotationConfigurer" destroy-method="stopRpcService">
+		<property name="packages" ref="rpcPackages"/>
+		<property name="rpcClients" ref="clientMap"></property>
 	</bean>
 	
 	<context:component-scan base-package="com.linda.framework.rpc.spring.test"></context:component-scan>
