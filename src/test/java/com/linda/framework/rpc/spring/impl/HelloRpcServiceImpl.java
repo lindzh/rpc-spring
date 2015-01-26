@@ -9,7 +9,7 @@ import com.linda.framework.rpc.spring.test.TestBean;
 import com.linda.framework.rpc.spring.test.TestRemoteBean;
 
 @Service
-@RpcProviderService(rpcServer="simpleRpcServer")
+@RpcProviderService(rpcServer="simpleRpcServer",version="1.1")
 public class HelloRpcServiceImpl implements HelloRpcService{
 
 	private Logger logger = Logger.getLogger(HelloRpcServiceImpl.class);

@@ -43,7 +43,7 @@ public class RpcInvokerFactoryBean<T> implements FactoryBean<T> {
 		if(rpcClient==null){
 			throw new BeanCreationException("can't find rpc client of name:"+rpcServer);
 		}
-		return rpcClient.register(invokerInterface);
+		return rpcClient.register(invokerInterface,invokerService.version());
 	}
 
 	@Override

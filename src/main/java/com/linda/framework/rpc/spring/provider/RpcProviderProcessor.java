@@ -59,8 +59,8 @@ public class RpcProviderProcessor implements ApplicationContextAware,Initializin
 			Class<?>[] ifs = obj.getClass().getInterfaces();
 			for(Class<?> iface:ifs){
 				RpcProviderService service = providerService;
-				if(providerService==null){
-					iface.getAnnotation(RpcProviderService.class);
+				if(service==null){
+					service = iface.getAnnotation(RpcProviderService.class);
 				}
 				if(service!=null){
 					String bean = service.rpcServer();
@@ -71,7 +71,7 @@ public class RpcProviderProcessor implements ApplicationContextAware,Initializin
 					if(server==null){
 						throw new BeanCreationException("can't find rpcServer of name:"+bean);
 					}
-					server.register(iface, obj);
+					server.register(iface, obj,service.version());
 					logger.info("register rpc bean:"+iface+" bean:"+bean);
 				}
 			}
