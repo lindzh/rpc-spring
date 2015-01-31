@@ -54,8 +54,28 @@ public class HelloRpcServiceImpl implements HelloRpcService{
 		<property name="host" value="127.0.0.1"></property>
 		<property name="port" value="5432"></property>
 	</bean>
+	
+	<!--add a user filter to rpcServerFilter-->
+	<bean id="rpcServerFilter" class="com.linda.framework.rpc.spring.filter.RpcTestFilter"/>
 
 	<bean class="com.linda.framework.rpc.spring.provider.RpcProviderProcessor" destroy-method="stopRpcService"/>
+```
+
+>See something about the filter
+
+```java
+@RpcProviderFilter(rpcServer="simpleRpcServer")
+public class RpcTestFilter implements RpcFilter{
+	
+	private Logger logger = Logger.getLogger(RpcTestFilter.class);
+
+	@Override
+	public void doFilter(RpcObject rpc, RemoteCall call, RpcSender sender,
+			RpcFilterChain chain) {
+		logger.info(rpc.getHost()+":"+rpc.getPort()+" service:"+call.getService()+"."+call.getVersion());
+		chain.nextFilter(rpc, call, sender);
+	}
+}
 ```
 
 >Start Server and use it Local

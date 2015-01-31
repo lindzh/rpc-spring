@@ -15,6 +15,8 @@
 		<property name="host" value="127.0.0.1"></property>
 		<property name="port" value="5432"></property>
 	</bean>
+	
+	<bean id="rpcServerFilter" class="com.linda.framework.rpc.spring.filter.RpcTestFilter"/>
 
 	<bean class="com.linda.framework.rpc.spring.provider.RpcProviderProcessor" destroy-method="stopRpcService"/>
 	
